@@ -60,12 +60,11 @@ fn ball_collision(ball1: &Ball, ball2: &Ball) -> bool {
     let radius_sum = ball1.radius + ball2.radius;
     (dx * dx + dy * dy) <= radius_sum * radius_sum
 }
-fn gravitational_acceleration (ball: &mut Ball, gravity: f32, terminal_velocity: f32) {
-    if terminal_velocity <= ball.y_velocity {
-                ball.y_velocity += -gravity
-            }
-
-            ball.y += -ball.y_velocity;
+fn gravitational_acceleration(ball: &mut Ball, gravity: f32, terminal_velocity: f32) {
+    if ball.y_velocity < terminal_velocity {
+        ball.y_velocity += gravity;
+    }
+    ball.y += ball.y_velocity;   // no negation
 }
 fn horizontal_movement (ball: &mut Ball) {
     ball.x += ball.x_velocity
@@ -80,7 +79,7 @@ fn generate_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
             y_velocity: rng.gen_range(-3.0..3.0),
             radius: rng.gen_range(10.0..20.0),
             mass: rng.gen_range(5.0..20.0),
-            restitution: 0.7,
+            restitution: 0.1,
         })
         .collect()
 }
@@ -93,17 +92,27 @@ fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col
     ball2.x += overlap/2.0 * x_col_norm;
     ball2.y += overlap/2.0 * y_col_norm;
 }
+fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32) -> f32 {
+    let e: f32 = ball1.restitution*ball2.restitution;
+    return -(1.0 + e) * velocity_along_normal / (1.0 / ball1.mass + 1.0 / ball2.mass);
+}
+fn change_velocity_from_collision(ball1: &mut Ball, ball2: &mut Ball, collision_impulse: f32, x_col_norm: f32, y_col_norm: f32) {
+    ball1.x_velocity += (collision_impulse / ball1.mass) * x_col_norm;
+    ball1.y_velocity += (collision_impulse / ball1.mass) * y_col_norm;
+    ball2.x_velocity += (collision_impulse / ball2.mass) * x_col_norm;
+    ball2.y_velocity += (collision_impulse / ball2.mass) * y_col_norm;
+}
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
     //Modifies that gain speed
     let gravity: f32 = 0.1;
     //Max Speed post aceleration
-    let terminal_velocity: f32 = -5.0;
+    let terminal_velocity: f32 = 5.0;
 
 
     //Defines a example ball
-    let mut balls = generate_balls(2, 800.0, 600.0);
+    let mut balls = generate_balls(5, 800.0, 600.0);
 
     loop {
         clear_background(LIGHTGRAY);
@@ -128,7 +137,6 @@ async fn main() {
             for ball_j in right.iter_mut() {
                 if ball_collision(ball_i, ball_j) == true {
                     //Setup for finding the collision normal
-
                     //X axis distance
                     let dx: f32 = ball_i.x - ball_j.x;
                     //Y axis distance
@@ -137,7 +145,6 @@ async fn main() {
                     let dist: f32 = (dx*dx+dy*dy).sqrt();
                     
                     //Calculate the collision normal
-
                     //X axis collision normal
                     let nx: f32 = dx/dist;
                     //Y axis collision normal
@@ -146,11 +153,22 @@ async fn main() {
                     //Resolve any overlap inbetween the 2 collided balls
                     resolve_ball_overlap(ball_i, ball_j, dist, nx, ny);
 
-                    //Find the relative velocity across axes
-                    
+                    //Find the relative velocity across axes and normal
                     //X axis relative velocity
                     let xrv: f32 = ball_i.x_velocity - ball_j.x_velocity;
+                    //Y axis relative velocity
                     let yrv: f32 = ball_i.y_velocity - ball_j.y_velocity;
+                    //Normal relative velocity
+                    let velocity_along_normal: f32 = xrv*nx + yrv*ny;
+                    //Breaks out of loop if balls traveling apart already
+                    if velocity_along_normal > 0.0 { continue;}
+
+                    //Finds the impulse of the 2 balls collision to calculate the bounce
+                    let collision_impulse: f32 = find_collision_impulse(ball_i, ball_j, velocity_along_normal);
+
+                    //Make changes to the velocity from the collision
+                    change_velocity_from_collision(ball_i, ball_j, collision_impulse, nx, ny);
+
                 }
                 
             }
