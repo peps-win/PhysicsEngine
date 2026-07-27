@@ -102,8 +102,39 @@ fn change_velocity_from_collision(ball1: &mut Ball, ball2: &mut Ball, collision_
     ball2.x_velocity -= (collision_impulse / ball2.mass) * x_col_norm;
     ball2.y_velocity -= (collision_impulse / ball2.mass) * y_col_norm;
 }
-fn ball_collisions(ball1: &mut Ball, ball2: &mut Ball)  {
+fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
+    //Setup for finding the collision normal
+    //X axis distance
+    let dx: f32 = ball1.x - ball2.x;
+    //Y axis distance
+    let dy: f32 = ball1.y - ball2.y;
+    //Direct line distance
+    let dist: f32 = (dx*dx+dy*dy).sqrt();
+    
+    //Calculate the collision normal
+    //X axis collision normal
+    let nx: f32 = dx/dist;
+    //Y axis collision normal
+    let ny: f32 = dy/dist;
 
+    //Resolve any overlap inbetween the 2 collided balls
+    resolve_ball_overlap(ball1, ball2, dist, nx, ny);
+
+    //Find the relative velocity across axes and normal
+    //X axis relative velocity
+    let xrv: f32 = ball1.x_velocity - ball2.x_velocity;
+    //Y axis relative velocity
+    let yrv: f32 = ball1.y_velocity - ball2.y_velocity;
+    //Normal relative velocity
+    let velocity_along_normal: f32 = xrv*nx + yrv*ny;
+    //Breaks out of loop if balls traveling apart already
+    if velocity_along_normal > 0.0 { return;}
+
+    //Finds the impulse of the 2 balls collision to calculate the bounce
+    let collision_impulse: f32 = find_collision_impulse(ball1, ball2, velocity_along_normal);
+
+    //Make changes to the velocity from the collision
+    change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
 
 #[macroquad::main("BasicShapes")]
@@ -139,39 +170,7 @@ async fn main() {
             let ball_i = &mut left[i];
             for ball_j in right.iter_mut() {
                 if ball_collision(ball_i, ball_j) == true {
-                    //Setup for finding the collision normal
-                    //X axis distance
-                    let dx: f32 = ball_i.x - ball_j.x;
-                    //Y axis distance
-                    let dy: f32 = ball_i.y - ball_j.y;
-                    //Direct line distance
-                    let dist: f32 = (dx*dx+dy*dy).sqrt();
-                    
-                    //Calculate the collision normal
-                    //X axis collision normal
-                    let nx: f32 = dx/dist;
-                    //Y axis collision normal
-                    let ny: f32 = dy/dist;
-
-                    //Resolve any overlap inbetween the 2 collided balls
-                    resolve_ball_overlap(ball_i, ball_j, dist, nx, ny);
-
-                    //Find the relative velocity across axes and normal
-                    //X axis relative velocity
-                    let xrv: f32 = ball_i.x_velocity - ball_j.x_velocity;
-                    //Y axis relative velocity
-                    let yrv: f32 = ball_i.y_velocity - ball_j.y_velocity;
-                    //Normal relative velocity
-                    let velocity_along_normal: f32 = xrv*nx + yrv*ny;
-                    //Breaks out of loop if balls traveling apart already
-                    if velocity_along_normal > 0.0 { continue;}
-
-                    //Finds the impulse of the 2 balls collision to calculate the bounce
-                    let collision_impulse: f32 = find_collision_impulse(ball_i, ball_j, velocity_along_normal);
-
-                    //Make changes to the velocity from the collision
-                    change_velocity_from_collision(ball_i, ball_j, collision_impulse, nx, ny);
-
+                    ball_collision_correction(ball_i, ball_j);
                 }
                 
             }
