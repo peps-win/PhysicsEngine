@@ -79,7 +79,7 @@ fn generate_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
             y_velocity: rng.gen_range(-3.0..3.0),
             radius: rng.gen_range(10.0..20.0),
             mass: rng.gen_range(5.0..20.0),
-            restitution: 0.1,
+            restitution: 0.7,
         })
         .collect()
 }
@@ -87,10 +87,10 @@ fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col
     //Calculate the overlap
     let overlap = (ball1.radius + ball2.radius) - distance;
 
-    ball1.x -= overlap/2.0 * x_col_norm;
-    ball1.y -= overlap/2.0 * y_col_norm;
-    ball2.x += overlap/2.0 * x_col_norm;
-    ball2.y += overlap/2.0 * y_col_norm;
+    ball1.x += overlap/2.0 * x_col_norm;
+    ball1.y += overlap/2.0 * y_col_norm;
+    ball2.x -= overlap/2.0 * x_col_norm;
+    ball2.y -= overlap/2.0 * y_col_norm;
 }
 fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32) -> f32 {
     let e: f32 = ball1.restitution*ball2.restitution;
@@ -99,8 +99,11 @@ fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32
 fn change_velocity_from_collision(ball1: &mut Ball, ball2: &mut Ball, collision_impulse: f32, x_col_norm: f32, y_col_norm: f32) {
     ball1.x_velocity += (collision_impulse / ball1.mass) * x_col_norm;
     ball1.y_velocity += (collision_impulse / ball1.mass) * y_col_norm;
-    ball2.x_velocity += (collision_impulse / ball2.mass) * x_col_norm;
-    ball2.y_velocity += (collision_impulse / ball2.mass) * y_col_norm;
+    ball2.x_velocity -= (collision_impulse / ball2.mass) * x_col_norm;
+    ball2.y_velocity -= (collision_impulse / ball2.mass) * y_col_norm;
+}
+fn ball_collisions(ball1: &mut Ball, ball2: &mut Ball)  {
+
 }
 
 #[macroquad::main("BasicShapes")]
@@ -112,7 +115,7 @@ async fn main() {
 
 
     //Defines a example ball
-    let mut balls = generate_balls(5, 800.0, 600.0);
+    let mut balls = generate_balls(25, 800.0, 600.0);
 
     loop {
         clear_background(LIGHTGRAY);
