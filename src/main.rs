@@ -25,27 +25,40 @@ fn window_conf() -> Conf {
     }
 }
 
+//FUNCTION DECLARATIONS
+//Handles contact with border, bouncing settling, rolling settling, and wall friction
 fn border_collision(ball: &mut Ball, window: &WindowData) {
-    let settle_threshold: f32 = 1.0;
+    let bounce_settle_threshold: f32 = 0.1;
+    let roll_settle_threshold: f32 = 0.1;
+    let ground_friction: f32 = 0.9975;
 
-    // bottom edge
+    //Ball contact with the bottom window boarder
     if ball.y + ball.radius > window.height {
         ball.y = window.height - ball.radius;
         ball.y_velocity *= -ball.restitution;
 
-        // When bounce is esentially 0 then rest
-        if ball.y_velocity.abs() < settle_threshold {
+        //Ball bounce settling when under the settle threashold
+        if ball.y_velocity.abs() < bounce_settle_threshold {
             ball.y_velocity = 0.0;
         }
+
+         //Ball roll settling when under the settle threashold
+        if ball.x_velocity.abs() < roll_settle_threshold {
+            ball.x_velocity = 0.0;
+        }
+
     }
 
-    // top edge
+    //Ball friction with the floor
+    ball.x_velocity *= ground_friction;
+
+    //Ball contact with the top window boarder
     if ball.y - ball.radius < 0.0 {
         ball.y = ball.radius;
         ball.y_velocity *= -ball.restitution;
     }
 
-    // left / right edges (same idea, using x_velocity)
+    // Ball contact with the side window boarder
     if ball.x - ball.radius < 0.0 {
         ball.x = ball.radius;
         ball.x_velocity *= -ball.restitution;
@@ -78,7 +91,7 @@ fn generate_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
             x_velocity: rng.gen_range(-3.0..3.0),
             y_velocity: rng.gen_range(-3.0..3.0),
             radius: rng.gen_range(10.0..20.0),
-            mass: rng.gen_range(5.0..20.0),
+            mass: rng.gen_range(3.0..15.0),
             restitution: 0.7,
         })
         .collect()
@@ -136,6 +149,9 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
+fn speed_decay(ball: &mut Ball) {
+    ball.x_velocity *= 0.999
+}
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
@@ -146,7 +162,7 @@ async fn main() {
 
 
     //Defines a example ball
-    let mut balls = generate_balls(25, 800.0, 600.0);
+    let mut balls = generate_balls(1, 800.0, 600.0);
 
     loop {
         clear_background(LIGHTGRAY);
@@ -159,9 +175,10 @@ async fn main() {
 
         for ball in balls.iter_mut() {
             gravitational_acceleration(ball, gravity, terminal_velocity);
-            border_collision(ball, &window);
             horizontal_movement(ball);
+            border_collision(ball, &window);
             draw_circle(ball.x, ball.y, ball.radius, YELLOW);
+            speed_decay(ball);
         }
 
         //Checks for collisions inbetween each ball and every other ball every frame 
