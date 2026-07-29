@@ -25,27 +25,42 @@ fn window_conf() -> Conf {
     }
 }
 
+//FUNCTION DECLARATIONS
+//Handles contact with border, bouncing settling, rolling settling, and wall friction
 fn border_collision(ball: &mut Ball, window: &WindowData) {
-    let settle_threshold: f32 = 1.0;
+    let bounce_settle_threshold: f32 = 0.1;
+    let roll_settle_threshold: f32 = 0.1;
+    let ground_friction: f32 = 0.9975;
 
-    // bottom edge
+    //Ball contact with the bottom window boarder
     if ball.y + ball.radius > window.height {
         ball.y = window.height - ball.radius;
         ball.y_velocity *= -ball.restitution;
 
-        // When bounce is esentially 0 then rest
-        if ball.y_velocity.abs() < settle_threshold {
+        //Ball bounce settling when under the settle threashold
+        if ball.y_velocity.abs() < bounce_settle_threshold {
             ball.y_velocity = 0.0;
         }
+
+         //Ball roll settling when under the settle threashold
+        if ball.x_velocity.abs() < roll_settle_threshold {
+            ball.x_velocity = 0.0;
+        }
+
     }
 
-    // top edge
+    //Ball friction with the floor
+    if ball.y + ball.radius > window.height {
+        ball.x_velocity *= ground_friction;
+    }
+
+    //Ball contact with the top window boarder
     if ball.y - ball.radius < 0.0 {
         ball.y = ball.radius;
         ball.y_velocity *= -ball.restitution;
     }
 
-    // left / right edges (same idea, using x_velocity)
+    // Ball contact with the side window boarder
     if ball.x - ball.radius < 0.0 {
         ball.x = ball.radius;
         ball.x_velocity *= -ball.restitution;
@@ -69,7 +84,7 @@ fn gravitational_acceleration(ball: &mut Ball, gravity: f32, terminal_velocity: 
 fn horizontal_movement (ball: &mut Ball) {
     ball.x += ball.x_velocity
 }
-fn generate_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
+fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
     let mut rng = ::rand::thread_rng();
     (0..count) 
         .map(|_| Ball {
@@ -78,10 +93,22 @@ fn generate_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
             x_velocity: rng.gen_range(-3.0..3.0),
             y_velocity: rng.gen_range(-3.0..3.0),
             radius: rng.gen_range(10.0..20.0),
-            mass: rng.gen_range(5.0..20.0),
+            mass: rng.gen_range(3.0..15.0),
             restitution: 0.7,
         })
         .collect()
+}
+fn generate_ball(x: f32, y: f32) -> Ball {
+    let mut rng = ::rand::thread_rng();
+    Ball {
+        x: x,
+        y: y,
+        x_velocity: rng.gen_range(-3.0..3.0),
+        y_velocity: rng.gen_range(-3.0..3.0),
+        radius: rng.gen_range(10.0..20.0),
+        mass: rng.gen_range(3.0..15.0),
+        restitution: 0.7,
+    }
 }
 fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col_norm: f32, y_col_norm: f32) {
     //Calculate the overlap
@@ -136,17 +163,19 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
+fn speed_decay(ball: &mut Ball) {
+    ball.x_velocity *= 0.999;
+}
 
-#[macroquad::main("BasicShapes")]
+#[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
     let gravity: f32 = 0.1;
     //Max Speed post aceleration
     let terminal_velocity: f32 = 5.0;
 
-
-    //Defines a example ball
-    let mut balls = generate_balls(25, 800.0, 600.0);
+    //Controls to starting spawn
+    let mut balls = generate_starting_balls(0, 800.0, 600.0);
 
     loop {
         clear_background(LIGHTGRAY);
@@ -156,23 +185,44 @@ async fn main() {
             height: screen_height(),
         };
         
+        //Draws the fps on the screen
+        draw_fps();
 
+        // Balls spawning once per frame 
+        if is_mouse_button_down(MouseButton::Right) == true {
+            let (x,y) = mouse_position();
+            balls.push(generate_ball(x, y));
+        }
+
+        // Ball spawn once per press
+        if is_mouse_button_released(MouseButton::Left) == true {
+            let (x,y) = mouse_position();
+            balls.push(generate_ball(x, y));
+        }
+
+        //Controls the independant movement of the ball
         for ball in balls.iter_mut() {
             gravitational_acceleration(ball, gravity, terminal_velocity);
-            border_collision(ball, &window);
             horizontal_movement(ball);
+            border_collision(ball, &window);
+            speed_decay(ball);
             draw_circle(ball.x, ball.y, ball.radius, YELLOW);
         }
 
-        //Checks for collisions inbetween each ball and every other ball every frame 
-        for i in 0..balls.len() {
-            let (left, right) = balls.split_at_mut(i+1);
-            let ball_i = &mut left[i];
-            for ball_j in right.iter_mut() {
-                if ball_collision(ball_i, ball_j) == true {
-                    ball_collision_correction(ball_i, ball_j);
+        //Checks for collisions inbetween each ball and every other ball
+        //Adjust iterations based on current FPS to control stability vs performance
+        let fps: i32 = get_fps();
+        let iterations: i32 = fps/4;
+
+        for _ in 0..iterations {
+            for i in 0..balls.len() {
+                let (left, right) = balls.split_at_mut(i+1);
+                let ball_i = &mut left[i];
+                for ball_j in right.iter_mut() {
+                    if ball_collision(ball_i, ball_j) == true {
+                        ball_collision_correction(ball_i, ball_j);
+                    }
                 }
-                
             }
         }
 
