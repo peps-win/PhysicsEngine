@@ -26,8 +26,10 @@ fn window_conf() -> Conf {
 }
 
 //FUNCTION DECLARATIONS
-//Handles contact with border, bouncing settling, rolling settling, and wall friction
+//Handles contact with border, bouncing settling, rolling settling, general speed decay, and wall friction
 fn border_collision(ball: &mut Ball, window: &WindowData) {
+    //Handles contact with all window borders, bounce settling, and window settling
+    
     let bounce_settle_threshold: f32 = 0.1;
     let roll_settle_threshold: f32 = 0.1;
     let ground_friction: f32 = 0.9975;
@@ -69,22 +71,29 @@ fn border_collision(ball: &mut Ball, window: &WindowData) {
         ball.x_velocity *= -ball.restitution;
     }
 }
-fn ball_collision(ball1: &Ball, ball2: &Ball) -> bool {
-    let dx = ball1.x - ball2.x;
-    let dy = ball1.y - ball2.y;
-    let radius_sum = ball1.radius + ball2.radius;
-    (dx * dx + dy * dy) <= radius_sum * radius_sum
-}
 fn gravitational_acceleration(ball: &mut Ball, gravity: f32, terminal_velocity: f32) {
+    //Gradually increases falling speed and pushes the ball down based on the velocity
+    
     if ball.y_velocity < terminal_velocity {
         ball.y_velocity += gravity;
     }
-    ball.y += ball.y_velocity;   // no negation
+    //Adds the current speed to change the position downward
+    ball.y += ball.y_velocity;
 }
 fn horizontal_movement (ball: &mut Ball) {
+    //Adds the horizontal speed to the horizontal position
+
     ball.x += ball.x_velocity
 }
+fn speed_decay(ball: &mut Ball) {
+    //Has a slow speed decay to the x velocity that acts similar to the gravity forcing the ball into the ground
+
+    ball.x_velocity *= 0.999;
+}
+//Generation aspects of the simulator
 fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
+    //Randomly generates a balls of a certain count inside of the inputted area
+
     let mut rng = ::rand::thread_rng();
     (0..count) 
         .map(|_| Ball {
@@ -99,6 +108,8 @@ fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
         .collect()
 }
 fn generate_ball(x: f32, y: f32) -> Ball {
+    //Generates a single ball per function call at a specificed coordinate
+
     let mut rng = ::rand::thread_rng();
     Ball {
         x: x,
@@ -110,7 +121,18 @@ fn generate_ball(x: f32, y: f32) -> Ball {
         restitution: 0.7,
     }
 }
+//Ball collision functions
+fn ball_collision(ball1: &Ball, ball2: &Ball) -> bool {
+    //Detection of a collision between balls
+
+    let dx = ball1.x - ball2.x;
+    let dy = ball1.y - ball2.y;
+    let radius_sum = ball1.radius + ball2.radius;
+    (dx * dx + dy * dy) <= radius_sum * radius_sum
+}
 fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col_norm: f32, y_col_norm: f32) {
+    //Finds the overlap of balls and snaps them to a new coordinate
+    
     //Calculate the overlap
     let overlap = (ball1.radius + ball2.radius) - distance;
 
@@ -120,16 +142,22 @@ fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col
     ball2.y -= overlap/2.0 * y_col_norm;
 }
 fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32) -> f32 {
+    //Gets the collision impulse to calculate the amount of bounce from balls
+
     let e: f32 = ball1.restitution*ball2.restitution;
     return -(1.0 + e) * velocity_along_normal / (1.0 / ball1.mass + 1.0 / ball2.mass);
 }
 fn change_velocity_from_collision(ball1: &mut Ball, ball2: &mut Ball, collision_impulse: f32, x_col_norm: f32, y_col_norm: f32) {
+    //Uses the collision impulse to change the ball's velocity
+
     ball1.x_velocity += (collision_impulse / ball1.mass) * x_col_norm;
     ball1.y_velocity += (collision_impulse / ball1.mass) * y_col_norm;
     ball2.x_velocity -= (collision_impulse / ball2.mass) * x_col_norm;
     ball2.y_velocity -= (collision_impulse / ball2.mass) * y_col_norm;
 }
 fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
+    //Uses all past ball collision functions to get the numbers to plug into the change_velocity_from_collision function
+
     //Setup for finding the collision normal
     //X axis distance
     let dx: f32 = ball1.x - ball2.x;
@@ -162,9 +190,6 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
 
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
-}
-fn speed_decay(ball: &mut Ball) {
-    ball.x_velocity *= 0.999;
 }
 
 #[macroquad::main("Physics Engine")]
