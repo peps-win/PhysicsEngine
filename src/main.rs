@@ -1,5 +1,5 @@
-use ::rand::Rng;
-use macroquad::{prelude::*};
+use macroquad::prelude::*;
+use macroquad::rand::*;
 
 struct Ball {
     x: f32,
@@ -9,6 +9,7 @@ struct Ball {
     radius: f32,
     mass: f32,
     restitution: f32,
+    ball_color: Color,
 }
 struct WindowData {
     width: f32,
@@ -25,7 +26,9 @@ fn window_conf() -> Conf {
     }
 }
 
+
 //FUNCTION DECLARATIONS
+
 //Handles contact with border, bouncing settling, rolling settling, general speed decay, and wall friction
 fn border_collision(ball: &mut Ball, window: &WindowData) {
     //Handles contact with all window borders, bounce settling, and window settling
@@ -44,7 +47,7 @@ fn border_collision(ball: &mut Ball, window: &WindowData) {
             ball.y_velocity = 0.0;
         }
 
-         //Ball roll settling when under the settle threashold
+        //Ball roll settling when under the settle threashold
         if ball.x_velocity.abs() < roll_settle_threshold {
             ball.x_velocity = 0.0;
         }
@@ -90,37 +93,50 @@ fn speed_decay(ball: &mut Ball) {
 
     ball.x_velocity *= 0.999;
 }
+
 //Generation aspects of the simulator
 fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
     //Randomly generates a balls of a certain count inside of the inputted area
 
-    let mut rng = ::rand::thread_rng();
     (0..count) 
         .map(|_| Ball {
-            x: rng.gen_range(0.0..width),
-            y: rng.gen_range(0.0..height),
-            x_velocity: rng.gen_range(-3.0..3.0),
-            y_velocity: rng.gen_range(-3.0..3.0),
-            radius: rng.gen_range(10.0..20.0),
-            mass: rng.gen_range(3.0..15.0),
+            x: gen_range(0.0, width),
+            y: gen_range(0.0, height),
+            x_velocity: gen_range(-3.0,3.0),
+            y_velocity: gen_range(-3.0,3.0),
+            radius: gen_range(10.0,20.0),
+            mass: gen_range(3.0,15.0),
             restitution: 0.7,
+            ball_color: generate_colors(),
         })
         .collect()
 }
 fn generate_ball(x: f32, y: f32) -> Ball {
     //Generates a single ball per function call at a specificed coordinate
 
-    let mut rng = ::rand::thread_rng();
+
     Ball {
         x: x,
         y: y,
-        x_velocity: rng.gen_range(-3.0..3.0),
-        y_velocity: rng.gen_range(-3.0..3.0),
-        radius: rng.gen_range(10.0..20.0),
-        mass: rng.gen_range(3.0..15.0),
+        x_velocity: gen_range(-3.0,3.0),
+        y_velocity: gen_range(-3.0,3.0),
+        radius: gen_range(10.0,20.0),
+        mass: gen_range(3.0,15.0),
         restitution: 0.7,
+        ball_color: generate_colors(),
     }
 }
+fn generate_colors() -> Color {
+    //Generate a new color for each ball with a maximum opacity
+    
+    Color {
+        r: gen_range(0.0,1.0),
+        g: gen_range(0.0,1.0),
+        b: gen_range(0.0,1.0),
+        a: 1.0,
+    }
+}
+
 //Ball collision functions
 fn ball_collision(ball1: &Ball, ball2: &Ball) -> bool {
     //Detection of a collision between balls
@@ -136,10 +152,10 @@ fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col
     //Calculate the overlap
     let overlap = (ball1.radius + ball2.radius) - distance;
 
-    ball1.x += overlap/2.0 * x_col_norm;
-    ball1.y += overlap/2.0 * y_col_norm;
-    ball2.x -= overlap/2.0 * x_col_norm;
-    ball2.y -= overlap/2.0 * y_col_norm;
+    ball1.x += overlap / 2.0 * x_col_norm;
+    ball1.y += overlap / 2.0 * y_col_norm;
+    ball2.x -= overlap / 2.0 * x_col_norm;
+    ball2.y -= overlap / 2.0 * y_col_norm;
 }
 fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32) -> f32 {
     //Gets the collision impulse to calculate the amount of bounce from balls
@@ -202,6 +218,7 @@ async fn main() {
     //Controls to starting spawn
     let mut balls = generate_starting_balls(0, 800.0, 600.0);
 
+
     loop {
         clear_background(LIGHTGRAY);
 
@@ -231,7 +248,7 @@ async fn main() {
             horizontal_movement(ball);
             border_collision(ball, &window);
             speed_decay(ball);
-            draw_circle(ball.x, ball.y, ball.radius, YELLOW);
+            draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
         }
 
         //Checks for collisions inbetween each ball and every other ball
