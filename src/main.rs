@@ -105,7 +105,7 @@ fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
             x_velocity: gen_range(-3.0,3.0),
             y_velocity: gen_range(-3.0,3.0),
             radius: gen_range(10.0,20.0),
-            mass: gen_range(3.0,15.0),
+            mass: gen_range(0.5,3.0),
             restitution: 0.7,
             ball_color: generate_colors(),
         })
@@ -151,11 +151,16 @@ fn resolve_ball_overlap(ball1: &mut Ball, ball2: &mut Ball, distance: f32, x_col
     
     //Calculate the overlap
     let overlap = (ball1.radius + ball2.radius) - distance;
+    //Find total colliding balls mass
+    let total_mass = ball1.mass + ball2.mass;
+    //Finds the ratios of mass for each ball to the total collision mass
+    let ratio1 = ball2.mass / total_mass;
+    let ratio2 = ball1.mass / total_mass;
 
-    ball1.x += overlap / 2.0 * x_col_norm;
-    ball1.y += overlap / 2.0 * y_col_norm;
-    ball2.x -= overlap / 2.0 * x_col_norm;
-    ball2.y -= overlap / 2.0 * y_col_norm;
+    ball1.x += overlap * ratio1 * x_col_norm;
+    ball1.y += overlap * ratio1 * y_col_norm;
+    ball2.x -= overlap * ratio2 * x_col_norm;
+    ball2.y -= overlap * ratio2 * y_col_norm;
 }
 fn find_collision_impulse(ball1: &Ball, ball2: &Ball, velocity_along_normal: f32) -> f32 {
     //Gets the collision impulse to calculate the amount of bounce from balls
@@ -180,7 +185,7 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     //Y axis distance
     let dy: f32 = ball1.y - ball2.y;
     //Direct line distance
-    let dist: f32 = (dx*dx+dy*dy).sqrt();
+    let dist: f32 = (dx*dx+dy*dy).sqrt().max(0.0001);
     
     //Calculate the collision normal
     //X axis collision normal
@@ -216,8 +221,9 @@ async fn main() {
     let terminal_velocity: f32 = 5.0;
 
     //Controls to starting spawn
-    let mut balls = generate_starting_balls(0, 800.0, 600.0);
+    let mut balls = generate_starting_balls(300, 800.0, 600.0);
 
+    let mut print_timer: f32 = 0.0;
 
     loop {
         clear_background(LIGHTGRAY);
@@ -242,19 +248,10 @@ async fn main() {
             balls.push(generate_ball(x, y));
         }
 
-        //Controls the independant movement of the ball
-        for ball in balls.iter_mut() {
-            gravitational_acceleration(ball, gravity, terminal_velocity);
-            horizontal_movement(ball);
-            border_collision(ball, &window);
-            speed_decay(ball);
-            draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
-        }
-
         //Checks for collisions inbetween each ball and every other ball
         //Adjust iterations based on current FPS to control stability vs performance
         let fps: i32 = get_fps();
-        let iterations: i32 = fps/4;
+        let iterations: i32 = (fps/2)*3;
 
         for _ in 0..iterations {
             for i in 0..balls.len() {
@@ -266,6 +263,21 @@ async fn main() {
                     }
                 }
             }
+        }
+
+        //Controls the independant movement of the ball
+        for ball in balls.iter_mut() {
+            gravitational_acceleration(ball, gravity, terminal_velocity);
+            horizontal_movement(ball);
+            border_collision(ball, &window);
+            speed_decay(ball);
+            draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
+        }
+
+        print_timer += get_frame_time();
+        if print_timer >= 1.0 {
+        println!("Ball count: {}", balls.len());
+        print_timer = 0.0;
         }
 
         next_frame().await
