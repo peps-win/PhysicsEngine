@@ -213,6 +213,21 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
 
+//Mouse ontrols
+fn mouse_inside_any_ball<'a>(balls: &'a [Ball], x: f32, y: f32) -> Option<&'a Ball> {
+    balls.iter().find(|ball| mouse_inside_ball(ball, x, y))
+}
+fn mouse_inside_ball(ball1: &Ball, x: f32, y: f32) -> bool {
+    let dx: f32 = (ball1.x - x) * (ball1.x - x);
+    let dy: f32 = (ball1.y - y) * (ball1.y - y);
+    let dist: f32 = (dx + dy).sqrt();
+
+    dist <= ball1.radius
+}
+fn mouse_inside_any_ball_bool(balls: &[Ball], x: f32, y: f32) -> bool {
+    balls.iter().any(|ball| mouse_inside_ball(ball, x, y))
+}
+
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
@@ -223,6 +238,7 @@ async fn main() {
     //Controls to starting spawn
     let mut balls = generate_starting_balls(300, 800.0, 600.0);
 
+    //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
 
     loop {
@@ -236,16 +252,19 @@ async fn main() {
         //Draws the fps on the screen
         draw_fps();
 
-        // Balls spawning once per frame 
+        //Balls spawning once per frame when right clicked 
         if is_mouse_button_down(MouseButton::Right) == true {
             let (x,y) = mouse_position();
             balls.push(generate_ball(x, y));
         }
 
-        // Ball spawn once per press
-        if is_mouse_button_released(MouseButton::Left) == true {
+        //Balls can be moved when pressed inside of
+        if is_mouse_button_down(MouseButton::Left) == true {
             let (x,y) = mouse_position();
-            balls.push(generate_ball(x, y));
+            if mouse_inside_any_ball_bool(balls, x, y) == true {
+                mouse_inside_any_ball(&balls, x, y).x = x;
+                
+            }     
         }
 
         //Checks for collisions inbetween each ball and every other ball
