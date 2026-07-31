@@ -1,5 +1,7 @@
 use macroquad::experimental::camera::mouse;
+use macroquad::input::KeyCode::R;
 use macroquad::input::KeyCode::Space;
+use macroquad::input::MouseButton::Left;
 use macroquad::prelude::*;
 use macroquad::rand::*;
 
@@ -272,7 +274,7 @@ async fn main() {
 
     //Intitalizes the paused variable for pause game state
     let mut paused: bool = false;
-    
+
     loop {
         //Sets window background color
         clear_background(LIGHTGRAY);
@@ -295,7 +297,8 @@ async fn main() {
         //Draws the fps on the screen
         draw_fps();
 
-        //BALL SPAWNING
+
+        //BALL CONTROL
 
         //Balls spawning once per frame when right clicked 
         //Generates a lot of balls very fast
@@ -303,9 +306,7 @@ async fn main() {
             balls.push(generate_ball(x, y));
         }
 
-        
-        //BALL GRABBING
-
+        //Ball movement
         //Adds any balls when mouse is pressed on it to the held_ball vector
         if is_mouse_button_pressed(MouseButton::Left) {
             //.iter_mut gives a mutable reference to each ball in
@@ -322,6 +323,10 @@ async fn main() {
             }
         }
 
+        //Ball Removal
+        if is_mouse_button_pressed(Left) & is_key_pressed(R ) {
+            
+        }
 
         //If paused then all simulation elements stop running
         if paused != true {

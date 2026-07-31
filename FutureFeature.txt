@@ -1,0 +1,12 @@
+In progress:
+Ball Deletion- Remove individual balls
+
+To Do:
+Reset Button- Remove all balls at once
+Adjustable gravity- Arrow keys to nudge gravity
+Add Forces like Explosion/Attraction- Moves balls a certain way
+Add Obstacles- Allow for funnels, dividers, walls, etc
+Add live ball counter on screen
+Add static obstacle drawing- When a button is held the user can draw an obstacle
+Add portals that can teleport balls in obstacles
+Add other shapes ( concave polygons, convex polygons, ovals, etc)
