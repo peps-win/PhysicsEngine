@@ -2,6 +2,8 @@ In progress:
 Ball Deletion- Remove individual balls
 
 To Do:
+Apply Rust style guide - https://doc.rust-lang.org/style-guide/
+Add unit testing where applicable
 Reset Button- Remove all balls at once
 Adjustable gravity- Arrow keys to nudge gravity
 Add Forces like Explosion/Attraction- Moves balls a certain way
