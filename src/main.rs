@@ -34,7 +34,7 @@ fn window_conf() -> Conf {
 fn border_collision(ball: &mut Ball, window: &WindowData) {
     //Handles contact with all window borders, bounce settling, and window settling
     
-    let bounce_settle_threshold: f32 = 0.1;
+    let bounce_settle_threshold: f32 = 0.001;
     let roll_settle_threshold: f32 = 0.1;
     let ground_friction: f32 = 0.9975;
 
@@ -75,10 +75,12 @@ fn border_collision(ball: &mut Ball, window: &WindowData) {
         ball.x_velocity *= -ball.restitution;
     }
 }
-fn gravitational_acceleration(ball: &mut Ball, gravity: f32, terminal_velocity: f32) {
+fn gravitational_acceleration(ball: &mut Ball, gravity: f32) {
     //Gradually increases falling speed and pushes the ball down based on the velocity
     
-    if ball.y_velocity < terminal_velocity {
+    let terminal_velocity = generate_terminal_velocity(ball);
+
+    if ball.y_velocity < terminal_velocity*3.0 {
         ball.y_velocity += gravity;
     }
     //Adds the current speed to change the position downward
@@ -99,16 +101,20 @@ fn speed_decay(ball: &mut Ball) {
 fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
     //Randomly generates a balls of a certain count inside of the inputted area
 
-    (0..count) 
-        .map(|_| Ball {
-            x: gen_range(0.0, width),
-            y: gen_range(0.0, height),
-            x_velocity: gen_range(-3.0,3.0),
-            y_velocity: gen_range(-3.0,3.0),
-            radius: gen_range(10.0,20.0),
-            mass: gen_range(0.5,3.0),
-            restitution: 0.7,
-            ball_color: generate_colors(),
+    (0..count)
+        .map(|_| {
+            let radius: f32 = gen_range(10.0, 20.0);
+
+            Ball {
+                x: gen_range(0.0, width),
+                y: gen_range(0.0, height),
+                x_velocity: gen_range(-3.0, 3.0),
+                y_velocity: gen_range(-3.0, 3.0),
+                radius: radius,
+                mass: gen_range(0.01, 0.03) * radius * radius,
+                restitution: 1.0,
+                ball_color: generate_colors(),
+            }
         })
         .collect()
 }
@@ -136,6 +142,15 @@ fn generate_colors() -> Color {
         b: gen_range(0.0,1.0),
         a: 1.0,
     }
+}
+fn generate_terminal_velocity(ball: &mut Ball) -> f32 {
+
+    let air_density: f32 = 1.225;
+    let drag_coefficient: f32 = 0.47;
+    let gravity_accel: f32 = 9.8; // real-world gravity, separate from your per-frame "gravity" constant
+    let area: f32 = std::f32::consts::PI * ball.radius * ball.radius;
+
+    (2.0 * ball.mass * gravity_accel / (air_density * drag_coefficient * area)).sqrt()
 }
 
 //Ball collision functions
@@ -243,12 +258,10 @@ fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
-    let gravity: f32 = 0.1;
-    //Max Speed post aceleration
-    let terminal_velocity: f32 = 5.0;
+    let gravity: f32 = 3.50;
 
     //Controls to starting spawn
-    let mut balls = generate_starting_balls(1, 800.0, 600.0);
+    let mut balls = generate_starting_balls(25, 800.0, 600.0);
 
     let mut held_ball: Option<usize> = None;
 
@@ -256,21 +269,33 @@ async fn main() {
     let mut print_timer: f32 = 0.0;
 
     loop {
+        //Sets window background color
         clear_background(LIGHTGRAY);
 
         let window = WindowData {
+            //Returns current screen width and height
+            //Used for the ball window collision function
             width: screen_width(),
             height: screen_height(),
         };
+        
+        //Returns the current mouse position
         let (x,y) = mouse_position();
 
         //Draws the fps on the screen
         draw_fps();
 
+
+        //BALL SPAWNING
+
         //Balls spawning once per frame when right clicked 
+        //Generates a lot of balls very fast
         if is_mouse_button_down(MouseButton::Right) == true {
             balls.push(generate_ball(x, y));
         }
+
+        
+        //BALL GRABBING
 
         //Adds any balls when mouse is pressed on it to the held_ball vector
         if is_mouse_button_pressed(MouseButton::Left) {
@@ -278,8 +303,6 @@ async fn main() {
             //.position returns the position of a ball that is under the mouse
             held_ball = balls.iter_mut().position(|ball| is_mouse_inside_ball(x, y, ball));
         }
-
-
         //Balls can be moved when pressed inside of
         if is_mouse_button_down(MouseButton::Left) == true {
             //The index i gives a mutable reference to the specific held ball
@@ -309,7 +332,7 @@ async fn main() {
 
         //Controls the independant movement of the ball
         for ball in balls.iter_mut() {
-            gravitational_acceleration(ball, gravity, terminal_velocity);
+            gravitational_acceleration(ball, gravity);
             horizontal_movement(ball);
             border_collision(ball, &window);
             speed_decay(ball);
