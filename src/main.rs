@@ -232,7 +232,7 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
 
-//Mouse controls
+//Control functions
 fn is_mouse_inside_ball(mouse_x: f32, mouse_y: f32, ball: &mut Ball) -> bool {
     //Detection of the mouse inside of a ball
 
@@ -257,7 +257,6 @@ fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
     ball.x += (mouse_x - ball.x) * follow_speed;
     ball.y += (mouse_y - ball.y) * follow_speed;
 }
-
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
@@ -271,6 +270,9 @@ async fn main() {
     //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
 
+    //Intitalizes the paused variable for pause game state
+    let mut paused: bool = false;
+    
     loop {
         //Sets window background color
         clear_background(LIGHTGRAY);
@@ -285,8 +287,10 @@ async fn main() {
         //Returns the current mouse position
         let (x,y) = mouse_position();
 
-
-        let paused: bool = is_key_down(Space);
+        //Controls the state of the pause
+        if is_key_pressed(Space) {
+            paused = !paused;
+        }
 
         //Draws the fps on the screen
         draw_fps();
