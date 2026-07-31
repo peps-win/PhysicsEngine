@@ -250,6 +250,8 @@ async fn main() {
     //Controls to starting spawn
     let mut balls = generate_starting_balls(1, 800.0, 600.0);
 
+    let mut held_ball: Option<usize> = None;
+
     //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
 
@@ -260,24 +262,31 @@ async fn main() {
             width: screen_width(),
             height: screen_height(),
         };
-        
+        let (x,y) = mouse_position();
+
         //Draws the fps on the screen
         draw_fps();
 
         //Balls spawning once per frame when right clicked 
         if is_mouse_button_down(MouseButton::Right) == true {
-            let (x,y) = mouse_position();
             balls.push(generate_ball(x, y));
         }
 
+        //Adds any balls when mouse is pressed on it to the held_ball vector
+        if is_mouse_button_pressed(MouseButton::Left) {
+            //.iter_mut gives a mutable reference to each ball in
+            //.position returns the position of a ball that is under the mouse
+            held_ball = balls.iter_mut().position(|ball| is_mouse_inside_ball(x, y, ball));
+        }
+
+
         //Balls can be moved when pressed inside of
         if is_mouse_button_down(MouseButton::Left) == true {
-            let (x,y) = mouse_position();
-
-            for ball in balls.iter_mut() {
-                if is_mouse_inside_ball(x, y, ball) == true {
-                        set_ball_to_mouse(x,y, ball);
-                }
+            //The index i gives a mutable reference to the specific held ball
+            if let Some(i) = held_ball {
+                set_ball_to_mouse(x, y, &mut balls[i]);
+            } else {
+                held_ball = None;
             }
         }
 
@@ -307,6 +316,7 @@ async fn main() {
             draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
         }
 
+        //Prints the ball count to terminal once per second
         print_timer += get_frame_time();
         if print_timer >= 1.0 {
         println!("Ball count: {}", balls.len());
