@@ -213,19 +213,13 @@ fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball)  {
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);  
 }
 
-//Mouse ontrols
-fn mouse_inside_any_ball<'a>(balls: &'a [Ball], x: f32, y: f32) -> Option<&'a Ball> {
-    balls.iter().find(|ball| mouse_inside_ball(ball, x, y))
-}
-fn mouse_inside_ball(ball1: &Ball, x: f32, y: f32) -> bool {
-    let dx: f32 = (ball1.x - x) * (ball1.x - x);
-    let dy: f32 = (ball1.y - y) * (ball1.y - y);
-    let dist: f32 = (dx + dy).sqrt();
+//Mouse controls
+fn is_mouse_inside_ball(mouse_x: f32, mouse_y: f32, ball: &mut Ball) -> bool {
+    //Detection of the mouse inside of a ball
 
-    dist <= ball1.radius
-}
-fn mouse_inside_any_ball_bool(balls: &[Ball], x: f32, y: f32) -> bool {
-    balls.iter().any(|ball| mouse_inside_ball(ball, x, y))
+    let dx = mouse_x - ball.x;
+    let dy = mouse_y - ball.y;
+    (dx * dx + dy * dy) <= ball.radius
 }
 
 #[macroquad::main("Physics Engine")]
@@ -261,10 +255,16 @@ async fn main() {
         //Balls can be moved when pressed inside of
         if is_mouse_button_down(MouseButton::Left) == true {
             let (x,y) = mouse_position();
-            if mouse_inside_any_ball_bool(balls, x, y) == true {
-                mouse_inside_any_ball(&balls, x, y).x = x;
-                
-            }     
+
+            for ball in balls.iter_mut() {
+                if is_mouse_inside_ball(x, y, ball) == true {
+                //     ball.x = x;
+                //     ball.y = y;
+                //     ball.x_velocity = 0.0;
+                //     ball.y_velocity = 0.0;
+                print!("{}", is_mouse_inside_ball(x, y, ball));
+                }
+            }
         }
 
         //Checks for collisions inbetween each ball and every other ball
@@ -295,7 +295,11 @@ async fn main() {
 
         print_timer += get_frame_time();
         if print_timer >= 1.0 {
+        let (x,y) = mouse_position();
         println!("Ball count: {}", balls.len());
+         for ball in balls.iter_mut() {
+            println!("Mouse is inside ball: {}", is_mouse_inside_ball(x, y, ball));
+        }
         print_timer = 0.0;
         }
 
