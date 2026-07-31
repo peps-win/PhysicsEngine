@@ -80,9 +80,9 @@ fn gravitational_acceleration(ball: &mut Ball, gravity: f32) {
     
     let terminal_velocity = generate_terminal_velocity(ball);
 
-    if ball.y_velocity < terminal_velocity*3.0 {
-        ball.y_velocity += gravity;
-    }
+    if ball.y_velocity < terminal_velocity * 20.0 {
+    ball.y_velocity += gravity;
+}
     //Adds the current speed to change the position downward
     ball.y += ball.y_velocity;
 }
@@ -112,7 +112,7 @@ fn generate_starting_balls(count: u64, width: f32, height: f32) -> Vec<Ball> {
                 y_velocity: gen_range(-3.0, 3.0),
                 radius: radius,
                 mass: gen_range(0.01, 0.03) * radius * radius,
-                restitution: 1.0,
+                restitution: 0.9,
                 ball_color: generate_colors(),
             }
         })
@@ -258,7 +258,7 @@ fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
-    let gravity: f32 = 3.50;
+    let gravity: f32 = 0.3;
 
     //Controls to starting spawn
     let mut balls = generate_starting_balls(25, 800.0, 600.0);
