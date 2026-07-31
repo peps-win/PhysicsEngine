@@ -1,4 +1,5 @@
 use macroquad::experimental::camera::mouse;
+use macroquad::input::KeyCode::Space;
 use macroquad::prelude::*;
 use macroquad::rand::*;
 
@@ -122,16 +123,18 @@ fn generate_ball(x: f32, y: f32) -> Ball {
     //Generates a single ball per function call at a specificed coordinate
 
 
-    Ball {
-        x: x,
-        y: y,
-        x_velocity: gen_range(-3.0,3.0),
-        y_velocity: gen_range(-3.0,3.0),
-        radius: gen_range(10.0,20.0),
-        mass: gen_range(3.0,15.0),
-        restitution: 0.7,
-        ball_color: generate_colors(),
-    }
+    let radius: f32 = gen_range(10.0, 20.0);
+
+            Ball {
+                x: x,
+                y: y,
+                x_velocity: gen_range(-3.0, 3.0),
+                y_velocity: gen_range(-3.0, 3.0),
+                radius: radius,
+                mass: gen_range(0.01, 0.03) * radius * radius,
+                restitution: 0.9,
+                ball_color: generate_colors(),
+            }
 }
 fn generate_colors() -> Color {
     //Generate a new color for each ball with a maximum opacity
@@ -282,9 +285,11 @@ async fn main() {
         //Returns the current mouse position
         let (x,y) = mouse_position();
 
+
+        let paused: bool = is_key_down(Space);
+
         //Draws the fps on the screen
         draw_fps();
-
 
         //BALL SPAWNING
 
@@ -313,32 +318,41 @@ async fn main() {
             }
         }
 
-        //Checks for collisions inbetween each ball and every other ball
-        //Adjust iterations based on current FPS to control stability vs performance
-        let fps: i32 = get_fps();
-        let iterations: i32 = (fps/2)*3;
 
-        for _ in 0..iterations {
-            for i in 0..balls.len() {
-                let (left, right) = balls.split_at_mut(i+1);
-                let ball_i = &mut left[i];
-                for ball_j in right.iter_mut() {
-                    if ball_collision(ball_i, ball_j) == true {
-                        ball_collision_correction(ball_i, ball_j);
+        //If paused then all simulation elements stop running
+        if paused != true {
+
+            //Checks for collisions inbetween each ball and every other ball
+            //Adjust iterations based on current FPS to control stability vs performance
+            let fps: i32 = get_fps();
+            let iterations: i32 = (fps/2)*3;
+
+            for _ in 0..iterations {
+                for i in 0..balls.len() {
+                    let (left, right) = balls.split_at_mut(i+1);
+                    let ball_i = &mut left[i];
+                    for ball_j in right.iter_mut() {
+                        if ball_collision(ball_i, ball_j) == true {
+                            ball_collision_correction(ball_i, ball_j);
+                        }
                     }
                 }
             }
-        }
 
-        //Controls the independant movement of the ball
+            //Controls the independant movement of the ball
+            for ball in balls.iter_mut() {
+                gravitational_acceleration(ball, gravity);
+                horizontal_movement(ball);
+                border_collision(ball, &window);
+                speed_decay(ball);
+                draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
+            }
+    } else {
+        //If the simulation is paused it still draws the balls to make sure they do not disappear
         for ball in balls.iter_mut() {
-            gravitational_acceleration(ball, gravity);
-            horizontal_movement(ball);
-            border_collision(ball, &window);
-            speed_decay(ball);
-            draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
-        }
-
+                draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
+            }
+    }
         //Prints the ball count to terminal once per second
         print_timer += get_frame_time();
         if print_timer >= 1.0 {
