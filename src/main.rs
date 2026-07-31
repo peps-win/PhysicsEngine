@@ -1,3 +1,4 @@
+use macroquad::experimental::camera::mouse;
 use macroquad::prelude::*;
 use macroquad::rand::*;
 
@@ -219,7 +220,13 @@ fn is_mouse_inside_ball(mouse_x: f32, mouse_y: f32, ball: &mut Ball) -> bool {
 
     let dx = mouse_x - ball.x;
     let dy = mouse_y - ball.y;
-    (dx * dx + dy * dy) <= ball.radius
+    (dx * dx + dy * dy) <= ball.radius*ball.radius
+}
+fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
+    ball.x_velocity = 0.0;
+    ball.y_velocity = 0.0;
+    ball.x = mouse_x;
+    ball.y = mouse_y;
 }
 
 #[macroquad::main("Physics Engine")]
@@ -230,7 +237,7 @@ async fn main() {
     let terminal_velocity: f32 = 5.0;
 
     //Controls to starting spawn
-    let mut balls = generate_starting_balls(300, 800.0, 600.0);
+    let mut balls = generate_starting_balls(1, 800.0, 600.0);
 
     //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
@@ -258,11 +265,7 @@ async fn main() {
 
             for ball in balls.iter_mut() {
                 if is_mouse_inside_ball(x, y, ball) == true {
-                //     ball.x = x;
-                //     ball.y = y;
-                //     ball.x_velocity = 0.0;
-                //     ball.y_velocity = 0.0;
-                print!("{}", is_mouse_inside_ball(x, y, ball));
+                        set_ball_to_mouse(x,y, ball);
                 }
             }
         }
@@ -295,11 +298,7 @@ async fn main() {
 
         print_timer += get_frame_time();
         if print_timer >= 1.0 {
-        let (x,y) = mouse_position();
         println!("Ball count: {}", balls.len());
-         for ball in balls.iter_mut() {
-            println!("Mouse is inside ball: {}", is_mouse_inside_ball(x, y, ball));
-        }
         print_timer = 0.0;
         }
 
