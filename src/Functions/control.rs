@@ -7,11 +7,9 @@ pub fn is_mouse_inside_ball(mouse_x: f32, mouse_y: f32, ball: &mut Ball) -> bool
 
     let dx = mouse_x - ball.x;
     let dy = mouse_y - ball.y;
-    (dx * dx + dy * dy) <= ball.radius*ball.radius
+    (dx * dx + dy * dy) <= ball.radius * ball.radius
 }
 pub fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
-
-
     //Changes the speed that the ball reacts 0.0 for no movement 1.0 for snapping
     //Closer to 0.0 the looser it is and worse at latching on to mouse
     let follow_speed: f32 = 0.9;

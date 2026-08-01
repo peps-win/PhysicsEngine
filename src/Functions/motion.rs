@@ -4,7 +4,7 @@ use crate::*;
 //Handles contact with border, bouncing settling, rolling settling, general speed decay, and wall friction
 pub fn border_collision(ball: &mut Ball, window: &WindowData) {
     //Handles contact with all window borders, bounce settling, and window settling
-    
+
     let bounce_settle_threshold: f32 = 0.001;
     let roll_settle_threshold: f32 = 0.1;
     let ground_friction: f32 = 0.9975;
@@ -23,7 +23,6 @@ pub fn border_collision(ball: &mut Ball, window: &WindowData) {
         if ball.x_velocity.abs() < roll_settle_threshold {
             ball.x_velocity = 0.0;
         }
-
     }
 
     //Ball friction with the floor
@@ -48,16 +47,16 @@ pub fn border_collision(ball: &mut Ball, window: &WindowData) {
 }
 pub fn gravitational_acceleration(ball: &mut Ball, gravity: f32) {
     //Gradually increases falling speed and pushes the ball down based on the velocity
-    
+
     let terminal_velocity = generate_terminal_velocity(ball);
 
     if ball.y_velocity < terminal_velocity * 20.0 {
-    ball.y_velocity += gravity;
-}
+        ball.y_velocity += gravity;
+    }
     //Adds the current speed to change the position downward
     ball.y += ball.y_velocity;
 }
-pub fn horizontal_movement (ball: &mut Ball) {
+pub fn horizontal_movement(ball: &mut Ball) {
     //Adds the horizontal speed to the horizontal position
 
     ball.x += ball.x_velocity

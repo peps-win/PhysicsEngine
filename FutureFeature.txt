@@ -1,9 +1,7 @@
 In progress:
-Ball Deletion- Remove individual balls
+Reset Button- Remove all balls at once
 
 To Do:
-Split into seperate files for cleanliness
-Apply Rust style guide - https://doc.rust-lang.org/style-guide/
 Add unit testing where applicable
 Reset Button- Remove all balls at once
 Adjustable gravity- Arrow keys to nudge gravity

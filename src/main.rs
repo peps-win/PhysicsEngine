@@ -1,20 +1,18 @@
-use std::ptr::read;
-
 use macroquad::input::KeyCode::R;
 use macroquad::input::KeyCode::Space;
 use macroquad::input::MouseButton::Left;
 use macroquad::prelude::*;
 use macroquad::rand::*;
 
-mod Functions;
-mod Structs;
+mod functions;
+mod structs;
 
-use crate::Structs::structs::*;
+use crate::structs::structs::*;
 
-use Functions::collision::*;
-use Functions::control::*;
-use Functions::generation::*;
-use Functions::motion::*;
+use functions::collision::*;
+use functions::control::*;
+use functions::generation::*;
+use functions::motion::*;
 
 fn window_conf() -> Conf {
     Conf {
@@ -26,10 +24,6 @@ fn window_conf() -> Conf {
     }
 }
 
-
-//FUNCTION DECLARATIONS
-
-//Control functions
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
@@ -40,9 +34,6 @@ async fn main() {
 
     //Ball held under mouse
     let mut held_ball: Option<usize> = None;
-
-    //Ball being removed from the ball vec
-    let mut removed_ball: Option<usize> = None;
 
     //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
@@ -60,9 +51,9 @@ async fn main() {
             width: screen_width(),
             height: screen_height(),
         };
-        
+
         //Returns the current mouse position
-        let (x,y) = mouse_position();
+        let (x, y) = mouse_position();
 
         //Controls the state of the pause
         if is_key_pressed(Space) {
@@ -72,10 +63,9 @@ async fn main() {
         //Draws the fps on the screen
         draw_fps();
 
-
         //BALL CONTROL
 
-        //Balls spawning once per frame when right clicked 
+        //Balls spawning once per frame when right clicked
         //Generates a lot of balls very fast
         if is_mouse_button_down(MouseButton::Right) == true {
             balls.push(generate_ball(x, y));
@@ -86,7 +76,9 @@ async fn main() {
         if is_mouse_button_pressed(MouseButton::Left) {
             //.iter_mut gives a mutable reference to each ball in
             //.position returns the position of a ball that is under the mouse
-            held_ball = balls.iter_mut().position(|ball| is_mouse_inside_ball(x, y, ball));
+            held_ball = balls
+                .iter_mut()
+                .position(|ball| is_mouse_inside_ball(x, y, ball));
         }
         //Balls can be moved when pressed inside of
         if is_mouse_button_down(MouseButton::Left) == true {
@@ -100,26 +92,25 @@ async fn main() {
 
         //Ball Removal
         if is_key_down(R) && is_mouse_button_down(Left) {
-            removed_ball = balls.iter_mut().position(|ball| is_mouse_inside_ball(x, y, ball));
-            if let Some(i) = removed_ball {
+            if let Some(i) = balls
+                .iter_mut()
+                .position(|ball| is_mouse_inside_ball(x, y, ball))
+            {
                 balls.remove(i);
                 held_ball = None;
-            } else {
-                removed_ball = None;
             }
         }
 
         //If paused then all simulation elements stop running
         if paused != true {
-
             //Checks for collisions inbetween each ball and every other ball
             //Adjust iterations based on current FPS to control stability vs performance
             let fps: i32 = get_fps();
-            let iterations: i32 = (fps/2)*3;
+            let iterations: i32 = (fps / 2) * 3;
 
             for _ in 0..iterations {
                 for i in 0..balls.len() {
-                    let (left, right) = balls.split_at_mut(i+1);
+                    let (left, right) = balls.split_at_mut(i + 1);
                     let ball_i = &mut left[i];
                     for ball_j in right.iter_mut() {
                         if ball_collision(ball_i, ball_j) == true {
@@ -137,17 +128,17 @@ async fn main() {
                 speed_decay(ball);
                 draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
             }
-    } else {
-        //If the simulation is paused it still draws the balls to make sure they do not disappear
-        for ball in balls.iter_mut() {
+        } else {
+            //If the simulation is paused it still draws the balls to make sure they do not disappear
+            for ball in balls.iter_mut() {
                 draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
             }
-    }
+        }
         //Prints the ball count to terminal once per second
         print_timer += get_frame_time();
         if print_timer >= 1.0 {
-        println!("Ball count: {}", balls.len());
-        print_timer = 0.0;
+            println!("Ball count: {}", balls.len());
+            print_timer = 0.0;
         }
 
         next_frame().await
