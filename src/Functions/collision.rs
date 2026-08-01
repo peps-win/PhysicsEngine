@@ -90,6 +90,25 @@ pub fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball) {
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);
 }
+pub fn resolve_all_collisions(balls: &mut Vec<Ball>) {
+    //Pulls all collision code together into one function that can be called to resolve collisions among every ball
+    
+    
+    let fps: i32 = get_fps();
+            let iterations: i32 = (fps / 2) * 3;
+
+            for _ in 0..iterations {
+                for i in 0..balls.len() {
+                    let (left, right) = balls.split_at_mut(i + 1);
+                    let ball_i = &mut left[i];
+                    for ball_j in right.iter_mut() {
+                        if ball_collision(ball_i, ball_j) == true {
+                            ball_collision_correction(ball_i, ball_j);
+                        }
+                    }
+                }
+            }
+}
 
 #[cfg(test)]
 mod tests {

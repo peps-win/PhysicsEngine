@@ -72,20 +72,7 @@ async fn main() {
         if paused != true {
             //Checks for collisions inbetween each ball and every other ball
             //Adjust iterations based on current FPS to control stability vs performance
-            let fps: i32 = get_fps();
-            let iterations: i32 = (fps / 2) * 3;
-
-            for _ in 0..iterations {
-                for i in 0..balls.len() {
-                    let (left, right) = balls.split_at_mut(i + 1);
-                    let ball_i = &mut left[i];
-                    for ball_j in right.iter_mut() {
-                        if ball_collision(ball_i, ball_j) == true {
-                            ball_collision_correction(ball_i, ball_j);
-                        }
-                    }
-                }
-            }
+            resolve_all_collisions(&mut balls);
 
             //Controls the independant movement of the ball
             for ball in balls.iter_mut() {
