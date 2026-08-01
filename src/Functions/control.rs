@@ -24,7 +24,52 @@ pub fn set_ball_to_mouse(mouse_x: f32, mouse_y: f32, ball: &mut Ball) {
     ball.x += (mouse_x - ball.x) * follow_speed;
     ball.y += (mouse_y - ball.y) * follow_speed;
 }
+pub fn ball_spawning(mouse_x: f32, mouse_y: f32, balls: &mut Vec<Ball>) {
+    //Balls spawning once per frame when RMB clicked
+    //Generates a lot of balls very fast
 
+
+    if is_mouse_button_down(MouseButton::Right) == true {
+        balls.push(generate_ball(mouse_x, mouse_y));
+    }
+}
+pub fn ball_movement(held_ball: &mut Option<usize>, mouse_x: f32, mouse_y: f32, balls: &mut Vec<Ball>) {
+    //Ball movement
+
+
+    //Adds any balls when mouse is pressed on it to the held_ball vector
+    if is_mouse_button_pressed(MouseButton::Left) {
+        //.iter() gives a  reference to each ball in Balls
+        //.position() returns the position of a ball that is under the mouse
+        *held_ball = balls
+            .iter()
+            .position(|ball| is_mouse_inside_ball(mouse_x, mouse_y, ball));
+    }
+    //Balls can be moved when pressed inside of
+    if is_mouse_button_down(MouseButton::Left) == true {
+        //The index i gives a mutable reference to the specific held ball
+        if let Some(i) = held_ball {
+            set_ball_to_mouse(mouse_x, mouse_y, &mut balls[*i]);
+        } else {
+            *held_ball = None;
+        }
+    }
+
+}
+pub fn ball_removal(held_ball: &mut Option<usize>, mouse_x: f32, mouse_y: f32, balls: &mut Vec<Ball>) {
+    //Ball Removal on LMB + 'R'
+
+
+    if is_key_down(R) && is_mouse_button_down(Left) {
+        if let Some(i) = balls
+            .iter()
+            .position(|ball| is_mouse_inside_ball(mouse_x, mouse_y, ball))
+        {
+            balls.remove(i);
+            *held_ball = None;
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

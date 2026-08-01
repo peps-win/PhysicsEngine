@@ -52,9 +52,9 @@ async fn main() {
             height: screen_height(),
         };
 
-        //Returns the current mouse position
+        //Finds mouse current x and y
         let (x, y) = mouse_position();
-
+        
         //Controls the state of the pause
         if is_key_pressed(Space) {
             paused = !paused;
@@ -64,42 +64,9 @@ async fn main() {
         draw_fps();
 
         //BALL CONTROL
-
-        //Balls spawning once per frame when right clicked
-        //Generates a lot of balls very fast
-        if is_mouse_button_down(MouseButton::Right) == true {
-            balls.push(generate_ball(x, y));
-        }
-
-        //Ball movement
-        //Adds any balls when mouse is pressed on it to the held_ball vector
-        if is_mouse_button_pressed(MouseButton::Left) {
-            //.iter() gives a  reference to each ball in Balls
-            //.position() returns the position of a ball that is under the mouse
-            held_ball = balls
-                .iter()
-                .position(|ball| is_mouse_inside_ball(x, y, ball));
-        }
-        //Balls can be moved when pressed inside of
-        if is_mouse_button_down(MouseButton::Left) == true {
-            //The index i gives a mutable reference to the specific held ball
-            if let Some(i) = held_ball {
-                set_ball_to_mouse(x, y, &mut balls[i]);
-            } else {
-                held_ball = None;
-            }
-        }
-
-        //Ball Removal
-        if is_key_down(R) && is_mouse_button_down(Left) {
-            if let Some(i) = balls
-                .iter()
-                .position(|ball| is_mouse_inside_ball(x, y, ball))
-            {
-                balls.remove(i);
-                held_ball = None;
-            }
-        }
+        ball_spawning(x, y, &mut balls);
+        ball_movement(&mut held_ball, x, y, &mut balls);
+        ball_removal(&mut held_ball, x, y, &mut balls);
 
         //If paused then all simulation elements stop running
         if paused != true {

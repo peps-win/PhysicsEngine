@@ -1,9 +1,9 @@
 In progress:
 Reset Button- Remove all balls at once
+Add unit testing where applicable
+    -Finished for collision.rs, motion.rs, and control.rs
 
 To Do:
-Add unit testing where applicable
-Reset Button- Remove all balls at once
 Adjustable gravity- Arrow keys to nudge gravity
 Add Forces like Explosion/Attraction- Moves balls a certain way
 Add Obstacles- Allow for funnels, dividers, walls, etc
