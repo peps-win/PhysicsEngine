@@ -74,10 +74,10 @@ async fn main() {
         //Ball movement
         //Adds any balls when mouse is pressed on it to the held_ball vector
         if is_mouse_button_pressed(MouseButton::Left) {
-            //.iter_mut gives a mutable reference to each ball in
-            //.position returns the position of a ball that is under the mouse
+            //.iter() gives a  reference to each ball in Balls
+            //.position() returns the position of a ball that is under the mouse
             held_ball = balls
-                .iter_mut()
+                .iter()
                 .position(|ball| is_mouse_inside_ball(x, y, ball));
         }
         //Balls can be moved when pressed inside of
@@ -93,7 +93,7 @@ async fn main() {
         //Ball Removal
         if is_key_down(R) && is_mouse_button_down(Left) {
             if let Some(i) = balls
-                .iter_mut()
+                .iter()
                 .position(|ball| is_mouse_inside_ball(x, y, ball))
             {
                 balls.remove(i);
