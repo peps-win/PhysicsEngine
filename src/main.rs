@@ -1,3 +1,5 @@
+use std::ptr::read;
+
 use macroquad::input::KeyCode::R;
 use macroquad::input::KeyCode::Space;
 use macroquad::input::MouseButton::Left;
@@ -36,7 +38,11 @@ async fn main() {
     //Controls to starting spawn
     let mut balls = generate_starting_balls(25, 800.0, 600.0);
 
+    //Ball held under mouse
     let mut held_ball: Option<usize> = None;
+
+    //Ball being removed from the ball vec
+    let mut removed_ball: Option<usize> = None;
 
     //Initalizes a variable for a timer for printing
     let mut print_timer: f32 = 0.0;
@@ -93,8 +99,14 @@ async fn main() {
         }
 
         //Ball Removal
-        if is_mouse_button_pressed(Left) & is_key_pressed(R ) {
-            
+        if is_key_down(R) && is_mouse_button_down(Left) {
+            removed_ball = balls.iter_mut().position(|ball| is_mouse_inside_ball(x, y, ball));
+            if let Some(i) = removed_ball {
+                balls.remove(i);
+                held_ball = None;
+            } else {
+                removed_ball = None;
+            }
         }
 
         //If paused then all simulation elements stop running
