@@ -1,4 +1,4 @@
-use crate::Structs::structs::*;
+use crate::structs::structs::*;
 use crate::*;
 
 //Ball collision functions
@@ -89,4 +89,107 @@ pub fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball) {
 
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_ball(x: f32, y: f32, radius: f32, restitution: f32) -> Ball {
+        Ball {
+            x,
+            y,
+            x_velocity: 0.0,
+            y_velocity: 0.0,
+            radius,
+            mass: 1.0,
+            restitution,
+            ball_color: macroquad::color::WHITE,
+        }
+    }
+    fn approx_eq(a: f32, b: f32) -> bool {
+        (a - b).abs() < 0.0001
+    }
+    
+    //Testing for the ball_collision function
+    #[test]
+    fn balls_overlapping_true() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
+        let ball2 = make_ball(0.0, 5.0, 10.0, 0.0);
+
+        assert!(ball_collision(&ball1, &ball2));
+    }
+    #[test]
+    fn balls_overlapping_false() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
+        let ball2 = make_ball(0.0, 25.0, 10.0, 0.0);
+
+        assert!(!ball_collision(&ball1, &ball2));
+    }
+    #[test]
+    fn balls_exact_same_position_true() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
+        let ball2 = make_ball(0.0, 0.0, 10.0, 0.0);
+
+        assert!(ball_collision(&ball1, &ball2));
+    }
+
+    //Testing for the find_collision_impulse function
+    #[test]
+    fn collision_impulse_equals_mass_and_restitution() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 1.0); // mass 1.0, restitution baked into helper — adjust as needed
+        let ball2 = make_ball(0.0, 5.0, 10.0, 1.0);
+
+        // e = 1.0 * 1.0 = 1.0
+        // impulse = -(1.0 + 1.0) * 5.0 / (1.0/1.0 + 1.0/1.0) = -2.0 * 5.0 / 2.0 = -5.0
+        let impulse = find_collision_impulse(&ball1, &ball2, 5.0);
+        assert_eq!(impulse, -5.0);
+    } 
+    #[test]
+    fn find_collision_impulse_zero_velocity_is_zero() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.8);
+        let ball2 = make_ball(0.0, 5.0, 10.0, 0.8);
+
+        let impulse = find_collision_impulse(&ball1, &ball2, 0.0);
+        assert_eq!(impulse, 0.0);
+    }
+    #[test]
+    fn find_collision_impulse_perfectly_elastic() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 1.0);
+        let ball2 = make_ball(0.0, 5.0, 10.0, 1.0);
+
+        // e = 1.0 * 1.0 = 1.0
+        // impulse = -(1.0 + 1.0) * 4.0 / (1.0/1.0 + 1.0/1.0) = -2.0 * 4.0 / 2.0 = -4.0
+        let impulse = find_collision_impulse(&ball1, &ball2, 4.0);
+        assert_eq!(impulse, -4.0);
+    }
+    #[test]
+    fn find_collision_impulse_perfectly_inelastic() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
+        let ball2 = make_ball(0.0, 5.0, 10.0, 0.0);
+
+        // e = 0.0 * 0.0 = 0.0
+        // impulse = -(1.0 + 0.0) * 4.0 / (1.0/1.0 + 1.0/1.0) = -1.0 * 4.0 / 2.0 = -2.0
+        let impulse = find_collision_impulse(&ball1, &ball2, 4.0);
+        assert_eq!(impulse, -2.0);
+    }
+    #[test]
+    fn find_collision_impulse_unequal_mass() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.8);
+        let mut ball2 = make_ball(0.0, 5.0, 10.0, 0.8);
+        ball2.mass = 3.0;
+
+        let impulse = find_collision_impulse(&ball1, &ball2, 5.0);
+        assert!(approx_eq(impulse, -6.15));
+    }
+    #[test]
+    fn find_collision_impulse_negative_velocity() {
+        let ball1 = make_ball(0.0, 0.0, 10.0, 0.8);
+        let ball2 = make_ball(0.0, 5.0, 10.0, 0.8);
+
+        // e = 0.64
+        // impulse = -(1.64) * (-3.0) / (1.0 + 1.0) = 4.92 / 2.0 = 2.46
+        let impulse = find_collision_impulse(&ball1, &ball2, -3.0);
+        assert_eq!(impulse, 2.46);
+    }
 }

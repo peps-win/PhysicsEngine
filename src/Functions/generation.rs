@@ -1,4 +1,4 @@
-use crate::Structs::structs::*;
+use crate::structs::structs::*;
 use crate::*;
 
 //Generation aspects of the simulator

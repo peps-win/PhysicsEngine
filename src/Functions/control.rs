@@ -1,4 +1,4 @@
-use crate::Structs::structs::*;
+use crate::structs::structs::*;
 use crate::*;
 
 //Control functions

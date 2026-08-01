@@ -1,4 +1,4 @@
-use crate::Structs::structs::*;
+use crate::structs::structs::*;
 use crate::*;
 
 //Handles contact with border, bouncing settling, rolling settling, general speed decay, and wall friction
