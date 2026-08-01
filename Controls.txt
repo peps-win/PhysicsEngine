@@ -1,0 +1,4 @@
+Rmb- Mass spawning of balls
+Lmb- Ball grabbing
+Lmb + 'R'- Removal of ball under mouse
+L-Shift + 'R'- Removes all balls

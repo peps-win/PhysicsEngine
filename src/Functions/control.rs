@@ -70,6 +70,13 @@ pub fn ball_removal(held_ball: &mut Option<usize>, mouse_x: f32, mouse_y: f32, b
         }
     }
 }
+pub fn remove_all_balls(balls: &mut Vec<Ball>) {
+    //Removes all balls when L-Shift + 'R' pressed
+
+    if is_key_down(R) && is_key_down(LeftShift) {
+        balls.clear();
+    }
+}
 
 #[cfg(test)]
 mod tests {

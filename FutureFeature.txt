@@ -1,5 +1,5 @@
 In progress:
-Reset Button- Remove all balls at once
+Add Forces like Explosion/Attraction- Moves balls a certain way
 Add unit testing where applicable
     -Finished for collision.rs, motion.rs, and control.rs
 
