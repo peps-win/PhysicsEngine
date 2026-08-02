@@ -11,6 +11,7 @@ use functions::collision::*;
 use functions::control::*;
 use functions::generation::*;
 use functions::motion::*;
+use functions::screen_text::*;
 
 fn window_conf() -> Conf {
     Conf {
@@ -58,8 +59,8 @@ async fn main() {
             paused = !paused;
         }
 
-        //Draws the fps on the screen
-        draw_fps();
+        //Draws the FPS, and ball count on the screen
+        draw_screen_text(&balls);
 
         //BALL CONTROL
         ball_spawning(x, y, &mut balls);
@@ -68,7 +69,7 @@ async fn main() {
         remove_all_balls(&mut balls);
         ball_attraction(&mut balls, x, y);
         ball_dispelation(&mut balls, x, y);
-        
+
         //If paused then all simulation elements stop running
         if paused != true {
             //Checks for collisions inbetween each ball and every other ball

@@ -1,11 +1,11 @@
 In progress:
-Add live ball counter on screen
+Grow radius when held and arrow keys pressed
 Add unit testing where applicable
     -Finished for collision.rs, motion.rs, and control.rs
 
 To Do:
+Add a config menu to configure specific aspects
 Add Obstacles- Allow for funnels, dividers, walls, etc
-Grow radius when held and arrow keys pressed
 Add static obstacle drawing- When a button is held the user can draw an obstacle
 Add portals that can teleport balls in obstacles
 Add other shapes ( concave polygons, convex polygons, ovals, etc)
