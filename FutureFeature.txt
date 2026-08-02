@@ -1,5 +1,4 @@
 In progress:
-Grow radius when held and arrow keys pressed
 Add unit testing where applicable
     -Finished for collision.rs, motion.rs, and control.rs
 

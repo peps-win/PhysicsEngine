@@ -34,9 +34,6 @@ async fn main() {
     //Ball held under mouse
     let mut held_ball: Option<usize> = None;
 
-    //Initalizes a variable for a timer for printing
-    let mut print_timer: f32 = 0.0;
-
     //Intitalizes the paused variable for pause game state
     let mut paused: bool = false;
 
@@ -69,6 +66,7 @@ async fn main() {
         remove_all_balls(&mut balls);
         ball_attraction(&mut balls, x, y);
         ball_dispelation(&mut balls, x, y);
+        radius_modification(&mut held_ball, &mut balls, x, y);
 
         //If paused then all simulation elements stop running
         if paused != true {
@@ -89,12 +87,6 @@ async fn main() {
             for ball in balls.iter_mut() {
                 draw_circle(ball.x, ball.y, ball.radius, ball.ball_color);
             }
-        }
-        //Prints the ball count to terminal once per second
-        print_timer += get_frame_time();
-        if print_timer >= 1.0 {
-            println!("Ball count: {}", balls.len());
-            print_timer = 0.0;
         }
 
         next_frame().await

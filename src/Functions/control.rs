@@ -2,6 +2,10 @@ use crate::structs::structs::*;
 use macroquad::input::KeyCode::R;
 use macroquad::input::KeyCode::D;
 use macroquad::input::KeyCode::A;
+use macroquad::input::KeyCode::J;
+use macroquad::input::KeyCode::K;
+use macroquad::input::KeyCode::Down;
+use macroquad::input::KeyCode::Up;
 use macroquad::input::KeyCode::LeftShift;
 use macroquad::input::MouseButton::Left;
 use crate::*;
@@ -150,6 +154,22 @@ pub fn ball_dispelation(balls: &mut Vec<Ball>, mouse_x: f32, mouse_y: f32) {
             }
         }
     }
+}
+//Change radius based on input while ball held
+pub fn radius_modification(held_ball: &mut Option<usize>,balls: &mut Vec<Ball>, mouse_x: f32, mouse_y: f32) {
+    //Const for the amount that the size changes per frame
+    let change_speed: f32 = 0.1;
+
+    if let Some(i) = held_ball { //Gets the reference to the position of the ball being held
+        if let Some(ball) = balls.get_mut(*i) { //Gets the ball and gives me a way to change radius
+            if is_key_down(Up) || is_key_down(K) {
+                ball.radius += change_speed;
+            }
+            if is_key_down(Down) || is_key_down(J) {
+                ball.radius -= change_speed;
+            }
+        }
+    } 
 }
 
 #[cfg(test)]
