@@ -1,0 +1,20 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Physics Engine</title>
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; background: black; }
+    canvas { width: 100vw !important; height: 100vh !important; display: block; }
+    </style>
+</head>
+<body>
+<script>
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+</script>
+<canvas id="glcanvas" tabindex='1'></canvas>
+<script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+<script>load("PhysicsEngine.wasm");</script>
+</body>
+</html>

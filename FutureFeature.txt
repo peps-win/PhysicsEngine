@@ -3,6 +3,8 @@ Add unit testing where applicable
     -Finished for collision.rs, motion.rs, and control.rs
 
 To Do:
+Blocking for doing collision math
+    -Seperate the screen into sections to avoid doing math for 2 balls too far to ever touch
 Add a config menu to configure specific aspects
 Add Obstacles- Allow for funnels, dividers, walls, etc
 Add static obstacle drawing- When a button is held the user can draw an obstacle
