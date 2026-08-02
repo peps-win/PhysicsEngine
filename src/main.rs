@@ -1,7 +1,4 @@
-use macroquad::input::KeyCode::R;
 use macroquad::input::KeyCode::Space;
-use macroquad::input::KeyCode::LeftShift;
-use macroquad::input::MouseButton::Left;
 use macroquad::prelude::*;
 use macroquad::rand::*;
 
@@ -69,7 +66,9 @@ async fn main() {
         ball_movement(&mut held_ball, x, y, &mut balls);
         ball_removal(&mut held_ball, x, y, &mut balls);
         remove_all_balls(&mut balls);
-
+        ball_attraction(&mut balls, x, y);
+        ball_dispelation(&mut balls, x, y);
+        
         //If paused then all simulation elements stop running
         if paused != true {
             //Checks for collisions inbetween each ball and every other ball
