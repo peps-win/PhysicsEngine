@@ -156,7 +156,7 @@ pub fn ball_dispelation(balls: &mut Vec<Ball>, mouse_x: f32, mouse_y: f32) {
     }
 }
 //Change radius based on input while ball held
-pub fn radius_modification(held_ball: &mut Option<usize>,balls: &mut Vec<Ball>, mouse_x: f32, mouse_y: f32) {
+pub fn radius_modification(held_ball: &mut Option<usize>,balls: &mut Vec<Ball>) {
     //Const for the amount that the size changes per frame
     let change_speed: f32 = 0.1;
 
@@ -186,6 +186,7 @@ mod tests {
             mass: 1.0,
             restitution: 0.0,
             ball_color: macroquad::color::WHITE,
+
         }
     }
 

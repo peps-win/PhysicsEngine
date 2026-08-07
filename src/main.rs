@@ -29,7 +29,11 @@ async fn main() {
     let gravity: f32 = 0.3;
 
     //Controls to starting spawn
-    let mut balls: Vec<Ball> = generate_starting_balls(25, 800.0, 600.0);
+    let mut balls: Vec<Ball> = generate_starting_balls(25, screen_width(), screen_height());
+
+    //Generates the grids to start before they regenerate inside the loop
+    let mut grids: Vec<Grid> = generate_starting_ball_grids(150, screen_width(), screen_height());
+
 
     //Ball held under mouse
     let mut held_ball: Option<usize> = None;
@@ -66,7 +70,7 @@ async fn main() {
         remove_all_balls(&mut balls);
         ball_attraction(&mut balls, x, y);
         ball_dispelation(&mut balls, x, y);
-        radius_modification(&mut held_ball, &mut balls, x, y);
+        radius_modification(&mut held_ball, &mut balls);
 
         //If paused then all simulation elements stop running
         if paused != true {

@@ -1,7 +1,9 @@
+use std::hash::Hash;
+
 use crate::structs::structs::*;
 use crate::*;
 
-//Ball collision functions
+//Old ball collision functions
 pub fn ball_collision_detection(ball1: &Ball, ball2: &Ball) -> bool {
     //Detection of a collision between balls
 
@@ -111,6 +113,76 @@ pub fn resolve_all_collisions(balls: &mut Vec<Ball>) {
             }
 }
 
+//New ball collision functions
+pub fn generate_starting_ball_grids(grid_size:usize, window_x: f32, window_y: f32 ) -> Vec<Grid> {
+    //Generates the grid inside the window
+
+    //Initalizes the starting grid vector
+    let mut grids: Vec<Grid> = Vec::new();
+
+    //Generates the count of grid for window size
+    let x_grid_count: usize = (window_x as usize / grid_size) + 1;
+    let y_grid_count: usize = (window_y as usize / grid_size) + 1;
+
+    for x in 0..x_grid_count {
+        for y in 0..y_grid_count {
+            grids.push(Grid {
+                cell_size: grid_size,
+                cell_coordinates: Coordinates { x: x * grid_size, y: y * grid_size },
+                ball_inside: Vec::new(),
+            });
+        }
+    }
+    grids
+}
+pub fn regenerate_grids_if_resized(grid_size:usize, grid: &mut Vec<Grid>, window_x: f32, window_y: f32) {
+
+    //Recompute what the grid dimensions SHOULD be for the current window size
+    let expected_x_count = ((window_x as usize) / grid_size) as usize + 1;
+    let expected_y_count = ((window_y as usize) / grid_size) as usize + 1;
+
+    //Derive what the grid's CURRENT dimensions actually are, from the highest
+    //stored cell coordinates present in the vector
+    let actual_x_count: usize = grid.iter().map(|c| c.cell_coordinates.x).max().unwrap_or(0) + 1;
+    let actual_y_count: usize = grid.iter().map(|c| c.cell_coordinates.y).max().unwrap_or(0) + 1;
+
+    //Only regenerate if the window size has actually changed the grid dimensions
+    if expected_x_count != actual_x_count || expected_y_count != actual_y_count {
+        *grid = generate_starting_ball_grids(grid_size, window_x, window_y);
+    }
+
+}
+pub fn find_ball_grid(grid_size:usize, ball_index: usize, ball: &Ball, grids: &mut Vec<Grid>, window_x: f32, window_y: f32) {
+
+    let collumn_count: usize = ((window_x as usize) / grid_size) as usize + 1;
+    let row_count: usize = ((window_y as usize) / grid_size) as usize + 1;
+
+    let mut row: usize = 0;
+    let mut collumn: usize = 0;
+
+    //Find ball Row (y-based)
+    for i in 1..row_count {
+        if ball.y <= (i as f32 * grid_size as f32) {
+            row = i - 1;
+            break;
+        }
+    }
+    //Find ball Collumn (x-based)
+    for i in 1..collumn_count {
+        if ball.x <= (i as f32 * grid_size as f32) {
+            collumn = i - 1;
+            break;
+        }
+    }
+
+    let index: usize = row * collumn_count + collumn;
+    let grid: &mut Grid = &mut grids[index];
+    grid.ball_inside.push(ball_index);
+}
+pub fn run_all_grid_code(grid_size:usize, grid: &mut Vec<Grid>, grids: &mut Vec<Grid>, ball_index: usize, ball: &Ball, window_x: f32, window_y: f32) {
+    regenerate_grids_if_resized(grid_size, grid, window_x, window_y);
+    find_ball_grid(grid_size, ball_index, ball, grids, window_x, window_y);
+}
 #[cfg(test)]
 mod tests {
     use super::*;
