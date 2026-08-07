@@ -90,26 +90,6 @@ pub fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball) {
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);
 }
-pub fn find_surrounding_balls(selected_ball: &Ball, balls: &Vec<Ball>) -> Vec<u32> {
-    let mut surrounding_balls: Vec<u32> = Vec::new();
-    
-    //Go through every ball in balls and calculate the distance between the selected ball and them
-    for (i, ball) in balls.iter().enumerate() {
-        //Setup for finding the collision normal
-        //X axis distance
-        let dx: f32 = ball.x - selected_ball.x;
-        //Y axis distance
-        let dy: f32 = ball.y - selected_ball.y;
-        //Direct line distance
-        let dist: f32 = (dx * dx + dy * dy).sqrt().max(0.0001);
-
-        //Pushes the ball to the Vector of surrounding balls if its radius is touching plus a margin
-        if dist <= selected_ball.radius + ball.radius + 10.0 {
-            surrounding_balls.push(i as u32);
-        }
-    }
-    surrounding_balls
-}
 pub fn resolve_all_collisions(balls: &mut Vec<Ball>) {
     //Pulls all collision code together into one function that can be called to resolve collisions among every ball
     
