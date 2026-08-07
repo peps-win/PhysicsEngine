@@ -22,14 +22,14 @@ fn window_conf() -> Conf {
         ..Default::default()
     }
 }
-
+ 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     //Modifies that gain speed
     let gravity: f32 = 0.3;
 
     //Controls to starting spawn
-    let mut balls = generate_starting_balls(25, 800.0, 600.0);
+    let mut balls: Vec<Ball> = generate_starting_balls(25, 800.0, 600.0);
 
     //Ball held under mouse
     let mut held_ball: Option<usize> = None;

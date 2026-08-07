@@ -2,7 +2,7 @@ use crate::structs::structs::*;
 use crate::*;
 
 //Ball collision functions
-pub fn ball_collision(ball1: &Ball, ball2: &Ball) -> bool {
+pub fn ball_collision_detection(ball1: &Ball, ball2: &Ball) -> bool {
     //Detection of a collision between balls
 
     let dx = ball1.x - ball2.x;
@@ -90,6 +90,26 @@ pub fn ball_collision_correction(ball1: &mut Ball, ball2: &mut Ball) {
     //Make changes to the velocity from the collision
     change_velocity_from_collision(ball1, ball2, collision_impulse, nx, ny);
 }
+pub fn find_surrounding_balls(selected_ball: &Ball, balls: &Vec<Ball>) -> Vec<u32> {
+    let mut surrounding_balls: Vec<u32> = Vec::new();
+    
+    //Go through every ball in balls and calculate the distance between the selected ball and them
+    for (i, ball) in balls.iter().enumerate() {
+        //Setup for finding the collision normal
+        //X axis distance
+        let dx: f32 = ball.x - selected_ball.x;
+        //Y axis distance
+        let dy: f32 = ball.y - selected_ball.y;
+        //Direct line distance
+        let dist: f32 = (dx * dx + dy * dy).sqrt().max(0.0001);
+
+        //Pushes the ball to the Vector of surrounding balls if its radius is touching plus a margin
+        if dist <= selected_ball.radius + ball.radius + 10.0 {
+            surrounding_balls.push(i as u32);
+        }
+    }
+    surrounding_balls
+}
 pub fn resolve_all_collisions(balls: &mut Vec<Ball>) {
     //Pulls all collision code together into one function that can be called to resolve collisions among every ball
     
@@ -99,10 +119,11 @@ pub fn resolve_all_collisions(balls: &mut Vec<Ball>) {
 
             for _ in 0..iterations {
                 for i in 0..balls.len() {
+
                     let (left, right) = balls.split_at_mut(i + 1);
                     let ball_i = &mut left[i];
                     for ball_j in right.iter_mut() {
-                        if ball_collision(ball_i, ball_j) == true {
+                        if ball_collision_detection(ball_i, ball_j) == true {
                             ball_collision_correction(ball_i, ball_j);
                         }
                     }
@@ -136,21 +157,21 @@ mod tests {
         let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
         let ball2 = make_ball(0.0, 5.0, 10.0, 0.0);
 
-        assert!(ball_collision(&ball1, &ball2));
+        assert!(ball_collision_detection(&ball1, &ball2));
     }
     #[test]
     fn balls_overlapping_false() {
         let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
         let ball2 = make_ball(0.0, 25.0, 10.0, 0.0);
 
-        assert!(!ball_collision(&ball1, &ball2));
+        assert!(!ball_collision_detection(&ball1, &ball2));
     }
     #[test]
     fn balls_exact_same_position_true() {
         let ball1 = make_ball(0.0, 0.0, 10.0, 0.0);
         let ball2 = make_ball(0.0, 0.0, 10.0, 0.0);
 
-        assert!(ball_collision(&ball1, &ball2));
+        assert!(ball_collision_detection(&ball1, &ball2));
     }
 
     //Testing for the find_collision_impulse function
